@@ -35,3 +35,14 @@ body, html {
   width: 100%;
   height: calc(100% - 50px);
 }
+
+@media (max-width: 600px) {
+  #topbar {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #topbar label, #topbar input, #topbar button {
+    flex: 1 1 100%;
+    margin: 2px 0;
+  }
+}

@@ -1,8 +1,13 @@
 let map, userMarker, routeLine;
 let lastCoords = null;
 
-function stepsToMeters(steps, heightCm) {
-  let stepLength = heightCm ? heightCm * 0.415 / 100 : 0.75; // meters
+function stepsToMeters(steps, feet, inches) {
+  let heightCm = 0;
+  if (feet || inches) {
+    let totalInches = (feet || 0) * 12 + (inches || 0);
+    heightCm = totalInches * 2.54;
+  }
+  let stepLength = heightCm ? heightCm * 0.415 / 100 : 0.75;
   return steps * stepLength;
 }
 
@@ -10,22 +15,23 @@ function generatePath(distanceMeters, coords) {
   if (routeLine) {
     map.removeLayer(routeLine);
   }
-  let lat = coords.lat;
-  let lng = coords.lng;
 
-  let offset = distanceMeters / 111000 / 4; 
-  let points = [
-    [lat, lng],
-    [lat + offset, lng],
-    [lat + offset, lng + offset],
-    [lat, lng + offset],
-    [lat, lng]
-  ];
+  // Generate a rough destination point offset north
+  let offset = distanceMeters / 111000;
+  let destLat = coords.lat + offset;
+  let destLng = coords.lng;
 
-  routeLine = L.polyline(points, { color: 'cyan' }).addTo(map);
-  map.fitBounds(routeLine.getBounds());
+  let url = `https://router.project-osrm.org/route/v1/foot/${coords.lng},${coords.lat};${destLng},${destLat}?overview=full&geometries=geojson`;
 
-  return points;
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (data.routes && data.routes.length > 0) {
+        let route = data.routes[0].geometry;
+        routeLine = L.geoJSON(route, { style: { color: 'cyan' } }).addTo(map);
+        map.fitBounds(routeLine.getBounds());
+      }
+    });
 }
 
 function openInGoogleMaps(points) {
@@ -49,21 +55,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('generateBtn').addEventListener('click', () => {
     let steps = parseInt(document.getElementById('stepsInput').value);
-    let height = parseInt(document.getElementById('heightInput').value);
+    let feet = parseInt(document.getElementById('heightFeet').value);
+    let inches = parseInt(document.getElementById('heightInches').value);
     if (steps && lastCoords) {
-      let meters = stepsToMeters(steps, height);
-      let points = generatePath(meters, lastCoords);
-      document.getElementById('gmapsBtn').onclick = () => openInGoogleMaps(points);
+      let meters = stepsToMeters(steps, feet, inches);
+      generatePath(meters, lastCoords);
+      document.getElementById('gmapsBtn').onclick = () => openInGoogleMaps(null);
     }
   });
 
   document.getElementById('redoBtn').addEventListener('click', () => {
     if (lastCoords) {
       let steps = parseInt(document.getElementById('stepsInput').value);
-      let height = parseInt(document.getElementById('heightInput').value);
-      let meters = stepsToMeters(steps, height);
-      let points = generatePath(meters, lastCoords);
-      document.getElementById('gmapsBtn').onclick = () => openInGoogleMaps(points);
+      let feet = parseInt(document.getElementById('heightFeet').value);
+      let inches = parseInt(document.getElementById('heightInches').value);
+      let meters = stepsToMeters(steps, feet, inches);
+      generatePath(meters, lastCoords);
+      document.getElementById('gmapsBtn').onclick = () => openInGoogleMaps(null);
     }
   });
 });
