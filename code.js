@@ -174,25 +174,8 @@ function stepsToMeters(steps, feet, inches) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Inject "Avoid main roads" toggle into the topbar programmatically (no HTML edits)
-  const topbar = document.getElementById('topbar');
-  if (topbar) {
-    const wrap = document.createElement('span');
-    wrap.style.display = 'inline-flex';
-    wrap.style.alignItems = 'center';
-    wrap.style.gap = '6px';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.id = 'avoidMainroads';
-    const lbl = document.createElement('label');
-    lbl.setAttribute('for', 'avoidMainroads');
-    lbl.textContent = 'Avoid main roads';
-    wrap.appendChild(cb);
-    wrap.appendChild(lbl);
-    topbar.insertBefore(wrap, topbar.querySelector('#generateBtn'));
-    // expose for generatePath
-    window.__avoidMainroads = cb;
-  }
+  // Use existing checkbox from HTML
+  window.__avoidMainroads = document.getElementById('avoidMainroads');
 
   map = L.map('map').setView([0, 0], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
