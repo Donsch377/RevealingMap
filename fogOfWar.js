@@ -115,7 +115,7 @@
     // Fill entire canvas with fog
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.fillStyle = 'rgba(0,0,0,.6)';
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
     if (hole) {
