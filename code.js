@@ -1,5 +1,6 @@
 let map, userMarker, routeLine;
 let lastCoords = null;
+let currentRouteCoords = null;
 
 function stepsToMeters(steps, feet, inches) {
   let heightCm = 0;
@@ -30,13 +31,26 @@ function generatePath(distanceMeters, coords) {
         let route = data.routes[0].geometry;
         routeLine = L.geoJSON(route, { style: { color: 'cyan' } }).addTo(map);
         map.fitBounds(routeLine.getBounds());
+        // Store route coordinates for Google Maps export
+        currentRouteCoords = route.coordinates;
+      } else {
+        currentRouteCoords = null;
       }
+    })
+    .catch(() => {
+      currentRouteCoords = null;
     });
 }
 
-function openInGoogleMaps(points) {
-  if (!points) return;
-  let url = `https://www.google.com/maps/dir/?api=1&origin=${points[0][0]},${points[0][1]}&destination=${points[points.length-1][0]},${points[points.length-1][1]}&travelmode=walking`;
+function openInGoogleMaps() {
+  if (!currentRouteCoords) return;
+  let origin = currentRouteCoords[0];
+  let destination = currentRouteCoords[currentRouteCoords.length - 1];
+  let waypoints = currentRouteCoords.slice(1, -1).map(c => c[1] + "," + c[0]).join("|");
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin[1]},${origin[0]}&destination=${destination[1]},${destination[0]}&travelmode=walking`;
+  if (waypoints) {
+    url += `&waypoints=${encodeURIComponent(waypoints)}`;
+  }
   window.open(url, '_blank');
 }
 
@@ -60,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (steps && lastCoords) {
       let meters = stepsToMeters(steps, feet, inches);
       generatePath(meters, lastCoords);
-      document.getElementById('gmapsBtn').onclick = () => openInGoogleMaps(null);
     }
   });
 
@@ -71,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
       let inches = parseInt(document.getElementById('heightInches').value);
       let meters = stepsToMeters(steps, feet, inches);
       generatePath(meters, lastCoords);
-      document.getElementById('gmapsBtn').onclick = () => openInGoogleMaps(null);
     }
   });
+
+  document.getElementById('gmapsBtn').onclick = openInGoogleMaps;
 });
