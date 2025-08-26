@@ -182,6 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
     maxZoom: 19
   }).addTo(map);
 
+  window.mapRef = map;
+
   navigator.geolocation.getCurrentPosition(pos => {
     let coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
     lastCoords = coords;
