@@ -1,1 +1,24 @@
-
+html, body, #map, #mask {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+#map {
+  position: relative;
+}
+#explore {
+  position: absolute;
+  z-index: 1000;
+  top: 10px;
+  left: 10px;
+}
+#mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: 500;
+  display: none;
+  clip-path: circle(0 at 0 0);
+}
