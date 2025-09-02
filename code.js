@@ -56,7 +56,7 @@ function updateFog() {
 
   const lat = userLatLng[0];
   const lng = userLatLng[1];
-  const radiusMeters = 9; // ~30 feet
+  const radiusMeters = 100; // reveal radius in meters
   const lngOffset = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
   const pointCenter = map.latLngToContainerPoint(userLatLng);
   const pointEast = map.latLngToContainerPoint([lat, lng + lngOffset]);
