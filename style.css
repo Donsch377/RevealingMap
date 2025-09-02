@@ -1,1 +1,27 @@
+html, body, #map {
+  height: 100%;
+  margin: 0;
+}
 
+#explore {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  padding: 8px 12px;
+}
+
+#fog {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  --x: 0px;
+  --y: 0px;
+  --r: 0px;
+  mask: radial-gradient(circle var(--r) at var(--x) var(--y), transparent 0, transparent calc(var(--r) + 1px), black calc(var(--r) + 1px));
+  -webkit-mask: radial-gradient(circle var(--r) at var(--x) var(--y), transparent 0, transparent calc(var(--r) + 1px), black calc(var(--r) + 1px));
+}
