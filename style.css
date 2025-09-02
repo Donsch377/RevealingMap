@@ -1,1 +1,24 @@
+html, body, #map {
+  height: 100%;
+  margin: 0;
+}
 
+#exploreBtn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  padding: 8px 12px;
+}
+
+#fog {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  clip-path: circle(0 at 50% 50%);
+  z-index: 500;
+}
