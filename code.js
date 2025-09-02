@@ -8,6 +8,9 @@ const fog = document.getElementById('fog');
 const btn = document.getElementById('exploreBtn');
 let watchId;
 let userMarker;
+let userLatLng;
+
+map.on('move', updateFog);
 
 btn.addEventListener('click', () => {
   if (watchId) {
@@ -25,30 +28,41 @@ btn.addEventListener('click', () => {
 function onLocation(position) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
-  const latlng = [lat, lng];
+  userLatLng = [lat, lng];
+  fog.style.display = 'block';
 
   if (!userMarker) {
-    userMarker = L.circleMarker(latlng, {
+    userMarker = L.circleMarker(userLatLng, {
       radius: 5,
       color: '#fff',
       fillColor: '#fff',
       fillOpacity: 1
     }).addTo(map);
   } else {
-    userMarker.setLatLng(latlng);
+    userMarker.setLatLng(userLatLng);
   }
 
-  map.setView(latlng, 18);
+  map.setView(userLatLng, 18);
 
-  const radiusMeters = 9; // ~30 feet
-  const lngOffset = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
-  const pointCenter = map.latLngToContainerPoint(latlng);
-  const pointEast = map.latLngToContainerPoint([lat, lng + lngOffset]);
-  const radiusPx = pointEast.x - pointCenter.x;
-
-  fog.style.clipPath = `circle(${radiusPx}px at ${pointCenter.x}px ${pointCenter.y}px)`;
+  updateFog();
 }
 
 function onError(err) {
   console.error(err);
+}
+
+function updateFog() {
+  if (!userLatLng) return;
+
+  const lat = userLatLng[0];
+  const lng = userLatLng[1];
+  const radiusMeters = 9; // ~30 feet
+  const lngOffset = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
+  const pointCenter = map.latLngToContainerPoint(userLatLng);
+  const pointEast = map.latLngToContainerPoint([lat, lng + lngOffset]);
+  const radiusPx = pointEast.x - pointCenter.x;
+
+  const mask = `radial-gradient(circle at ${pointCenter.x}px ${pointCenter.y}px, transparent ${radiusPx}px, black ${radiusPx}px)`;
+  fog.style.mask = mask;
+  fog.style.webkitMask = mask;
 }
