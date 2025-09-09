@@ -9,8 +9,17 @@ const btn = document.getElementById('exploreBtn');
 let watchId;
 let userMarker;
 let userLatLng;
+const RADIUS_METERS = 100;
+let visitedAreas = JSON.parse(localStorage.getItem('visitedAreas') || '[]');
 
 map.on('move', updateFog);
+
+map.whenReady(() => {
+  if (visitedAreas.length > 0) {
+    map.setView(visitedAreas[visitedAreas.length - 1], 18);
+    updateFog();
+  }
+});
 
 btn.addEventListener('click', () => {
   if (watchId) {
@@ -29,7 +38,7 @@ function onLocation(position) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
   userLatLng = [lat, lng];
-  fog.style.display = 'block';
+  addVisitedArea(userLatLng);
 
   if (!userMarker) {
     userMarker = L.circleMarker(userLatLng, {
@@ -51,18 +60,23 @@ function onError(err) {
   console.error(err);
 }
 
+function addVisitedArea(latlng) {
+  visitedAreas.push(latlng);
+  localStorage.setItem('visitedAreas', JSON.stringify(visitedAreas));
+}
+
 function updateFog() {
-  if (!userLatLng) return;
+  if (visitedAreas.length === 0) return;
 
-  const lat = userLatLng[0];
-  const lng = userLatLng[1];
-  const radiusMeters = 100; // reveal radius in meters
-  const lngOffset = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
-  const pointCenter = map.latLngToContainerPoint(userLatLng);
-  const pointEast = map.latLngToContainerPoint([lat, lng + lngOffset]);
-  const radiusPx = pointEast.x - pointCenter.x;
+  const masks = visitedAreas.map(([lat, lng]) => {
+    const lngOffset = RADIUS_METERS / (111320 * Math.cos(lat * Math.PI / 180));
+    const pointCenter = map.latLngToContainerPoint([lat, lng]);
+    const pointEast = map.latLngToContainerPoint([lat, lng + lngOffset]);
+    const radiusPx = pointEast.x - pointCenter.x;
+    return `radial-gradient(circle at ${pointCenter.x}px ${pointCenter.y}px, transparent ${radiusPx}px, black ${radiusPx}px)`;
+  });
 
-  const mask = `radial-gradient(circle at ${pointCenter.x}px ${pointCenter.y}px, transparent ${radiusPx}px, black ${radiusPx}px)`;
+  const mask = masks.join(',');
   fog.style.mask = mask;
   fog.style.webkitMask = mask;
 }
