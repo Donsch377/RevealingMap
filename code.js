@@ -80,8 +80,12 @@ function updateFog() {
   });
 
   const mask = masks.join(',');
-  fog.style.mask = mask;
-  fog.style.webkitMask = mask;
+  fog.style.maskImage = mask;
+  fog.style.webkitMaskImage = mask;
+  const composite = Array(masks.length - 1).fill('exclude').join(',');
+  fog.style.maskComposite = composite;
+  const webkitComposite = Array(masks.length - 1).fill('destination-out').join(',');
+  fog.style.webkitMaskComposite = webkitComposite;
 }
 
 function simulateWalk() {
