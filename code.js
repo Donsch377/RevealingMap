@@ -4,65 +4,111 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-const fog = document.getElementById('fog');
-const btn = document.getElementById('exploreBtn');
-let watchId;
-let userMarker;
-let userLatLng;
+const fogCanvas = document.getElementById('fog');
+const ctx = fogCanvas.getContext('2d');
+const exploreBtn = document.getElementById('explore');
+const simulateBtn = document.getElementById('simulate');
 
-map.on('move', updateFog);
+const RADIUS_METERS = 50;
+let marker;
+let revealed = JSON.parse(localStorage.getItem('revealed') || '[]');
 
-btn.addEventListener('click', () => {
-  if (watchId) {
-    return;
+map.whenReady(() => {
+  resizeCanvas();
+  if (revealed.length) {
+    const last = revealed[revealed.length - 1];
+    map.setView(last, 18);
   }
+  drawFog();
+});
+
+map.on('moveend zoomend', drawFog);
+window.addEventListener('resize', resizeCanvas);
+
+exploreBtn.addEventListener('click', () => {
   if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser.');
+    alert('Geolocation not supported');
     return;
   }
-  watchId = navigator.geolocation.watchPosition(onLocation, onError, {
+  navigator.geolocation.getCurrentPosition(onLocate, console.error, {
+    enableHighAccuracy: true
+  });
+  navigator.geolocation.watchPosition(onLocate, console.error, {
     enableHighAccuracy: true
   });
 });
 
-function onLocation(position) {
+simulateBtn.addEventListener('click', simulateWalk);
+
+function onLocate(position) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
-  userLatLng = [lat, lng];
-  fog.style.display = 'block';
+  updateMarker([lat, lng]);
+  map.setView([lat, lng], 18);
+  recordReveal(lat, lng);
+}
 
-  if (!userMarker) {
-    userMarker = L.circleMarker(userLatLng, {
+function updateMarker(latlng) {
+  if (!marker) {
+    marker = L.circleMarker(latlng, {
       radius: 5,
       color: '#fff',
       fillColor: '#fff',
       fillOpacity: 1
     }).addTo(map);
   } else {
-    userMarker.setLatLng(userLatLng);
+    marker.setLatLng(latlng);
   }
-
-  map.setView(userLatLng, 18);
-
-  updateFog();
 }
 
-function onError(err) {
-  console.error(err);
+function recordReveal(lat, lng) {
+  revealed.push({ lat, lng });
+  localStorage.setItem('revealed', JSON.stringify(revealed));
+  drawFog();
 }
 
-function updateFog() {
-  if (!userLatLng) return;
+function resizeCanvas() {
+  const size = map.getSize();
+  fogCanvas.width = size.x;
+  fogCanvas.height = size.y;
+  drawFog();
+}
 
-  const lat = userLatLng[0];
-  const lng = userLatLng[1];
-  const radiusMeters = 100; // reveal radius in meters
-  const lngOffset = radiusMeters / (111320 * Math.cos(lat * Math.PI / 180));
-  const pointCenter = map.latLngToContainerPoint(userLatLng);
-  const pointEast = map.latLngToContainerPoint([lat, lng + lngOffset]);
-  const radiusPx = pointEast.x - pointCenter.x;
+function drawFog() {
+  const size = map.getSize();
+  ctx.clearRect(0, 0, size.x, size.y);
+  ctx.fillStyle = 'rgba(255,255,255,0.99)';
+  ctx.fillRect(0, 0, size.x, size.y);
+  ctx.globalCompositeOperation = 'destination-out';
 
-  const mask = `radial-gradient(circle at ${pointCenter.x}px ${pointCenter.y}px, transparent ${radiusPx}px, black ${radiusPx}px)`;
-  fog.style.mask = mask;
-  fog.style.webkitMask = mask;
+  revealed.forEach(({ lat, lng }) => {
+    const center = map.latLngToContainerPoint([lat, lng]);
+    const edge = map.latLngToContainerPoint([lat, lng + metersToLng(RADIUS_METERS, lat)]);
+    const radius = edge.x - center.x;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function metersToLng(meters, lat) {
+  return meters / (111320 * Math.cos(lat * Math.PI / 180));
+}
+
+function simulateWalk() {
+  let steps = 0;
+  let current = marker ? marker.getLatLng() : map.getCenter();
+  updateMarker(current);
+  const interval = setInterval(() => {
+    current = [current.lat + 0.0001, current.lng];
+    updateMarker(current);
+    map.setView(current, 18);
+    recordReveal(current[0], current[1]);
+    steps++;
+    if (steps > 20) {
+      clearInterval(interval);
+    }
+  }, 1000);
 }

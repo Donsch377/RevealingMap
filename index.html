@@ -2,15 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Revealing Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="map"></div>
-  <div id="fog"></div>
-  <button id="exploreBtn">Explore</button>
-
+  <canvas id="fog"></canvas>
+  <div id="controls">
+    <button id="explore">Explore</button>
+    <button id="simulate">Simulate Walk</button>
+  </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="code.js"></script>
 </body>
