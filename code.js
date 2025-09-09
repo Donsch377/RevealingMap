@@ -32,6 +32,9 @@ btn.addEventListener('click', () => {
     alert('Geolocation is not supported by your browser.');
     return;
   }
+  navigator.geolocation.getCurrentPosition(onLocation, onError, {
+    enableHighAccuracy: true
+  });
   watchId = navigator.geolocation.watchPosition(onLocation, onError, {
     enableHighAccuracy: true
   });
@@ -80,7 +83,7 @@ function resizeFog() {
 function updateFog() {
   const size = map.getSize();
   fogCtx.clearRect(0, 0, size.x, size.y);
-  fogCtx.fillStyle = 'rgba(255,255,255,0.99)';
+  fogCtx.fillStyle = 'rgba(0,0,0,0.99)';
   fogCtx.fillRect(0, 0, size.x, size.y);
   fogCtx.globalCompositeOperation = 'destination-out';
 
