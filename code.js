@@ -5,124 +5,110 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const fogCanvas = document.getElementById('fog');
-const fogCtx = fogCanvas.getContext('2d');
-const btn = document.getElementById('exploreBtn');
-const simulateBtn = document.getElementById('simulateBtn');
-let watchId;
-let userMarker;
-let userLatLng;
-const RADIUS_METERS = 50;
-let visitedAreas = JSON.parse(localStorage.getItem('visitedAreas') || '[]');
+const ctx = fogCanvas.getContext('2d');
+const exploreBtn = document.getElementById('explore');
+const simulateBtn = document.getElementById('simulate');
 
-map.on('move', updateFog);
-map.on('resize', resizeFog);
+const RADIUS_METERS = 50;
+let marker;
+let revealed = JSON.parse(localStorage.getItem('revealed') || '[]');
 
 map.whenReady(() => {
-  resizeFog();
-  if (visitedAreas.length > 0) {
-    map.setView(visitedAreas[visitedAreas.length - 1], 18);
+  resizeCanvas();
+  if (revealed.length) {
+    const last = revealed[revealed.length - 1];
+    map.setView(last, 18);
   }
+  drawFog();
 });
 
-btn.addEventListener('click', () => {
-  if (watchId) {
-    return;
-  }
+map.on('moveend zoomend', drawFog);
+window.addEventListener('resize', resizeCanvas);
+
+exploreBtn.addEventListener('click', () => {
   if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser.');
+    alert('Geolocation not supported');
     return;
   }
-  navigator.geolocation.getCurrentPosition(onLocation, onError, {
+  navigator.geolocation.getCurrentPosition(onLocate, console.error, {
     enableHighAccuracy: true
   });
-  watchId = navigator.geolocation.watchPosition(onLocation, onError, {
+  navigator.geolocation.watchPosition(onLocate, console.error, {
     enableHighAccuracy: true
   });
 });
 
 simulateBtn.addEventListener('click', simulateWalk);
 
-function onLocation(position) {
+function onLocate(position) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
-  userLatLng = [lat, lng];
-  addVisitedArea(userLatLng);
+  updateMarker([lat, lng]);
+  map.setView([lat, lng], 18);
+  recordReveal(lat, lng);
+}
 
-  if (!userMarker) {
-    userMarker = L.circleMarker(userLatLng, {
+function updateMarker(latlng) {
+  if (!marker) {
+    marker = L.circleMarker(latlng, {
       radius: 5,
       color: '#fff',
       fillColor: '#fff',
       fillOpacity: 1
     }).addTo(map);
   } else {
-    userMarker.setLatLng(userLatLng);
+    marker.setLatLng(latlng);
   }
-
-  map.setView(userLatLng, 18);
-
-  updateFog();
 }
 
-function onError(err) {
-  console.error(err);
+function recordReveal(lat, lng) {
+  revealed.push({ lat, lng });
+  localStorage.setItem('revealed', JSON.stringify(revealed));
+  drawFog();
 }
 
-function addVisitedArea(latlng) {
-  visitedAreas.push(latlng);
-  localStorage.setItem('visitedAreas', JSON.stringify(visitedAreas));
-}
-
-function resizeFog() {
+function resizeCanvas() {
   const size = map.getSize();
   fogCanvas.width = size.x;
   fogCanvas.height = size.y;
-  updateFog();
+  drawFog();
 }
 
-function updateFog() {
+function drawFog() {
   const size = map.getSize();
-  fogCtx.clearRect(0, 0, size.x, size.y);
-  fogCtx.fillStyle = 'rgba(0,0,0,0.99)';
-  fogCtx.fillRect(0, 0, size.x, size.y);
-  fogCtx.globalCompositeOperation = 'destination-out';
+  ctx.clearRect(0, 0, size.x, size.y);
+  ctx.fillStyle = 'rgba(255,255,255,0.99)';
+  ctx.fillRect(0, 0, size.x, size.y);
+  ctx.globalCompositeOperation = 'destination-out';
 
-  visitedAreas.forEach(([lat, lng]) => {
-    const lngOffset = RADIUS_METERS / (111320 * Math.cos(lat * Math.PI / 180));
+  revealed.forEach(({ lat, lng }) => {
     const center = map.latLngToContainerPoint([lat, lng]);
-    const east = map.latLngToContainerPoint([lat, lng + lngOffset]);
-    const radiusPx = east.x - center.x;
-    fogCtx.beginPath();
-    fogCtx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);
-    fogCtx.fill();
+    const edge = map.latLngToContainerPoint([lat, lng + metersToLng(RADIUS_METERS, lat)]);
+    const radius = edge.x - center.x;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.fill();
   });
 
-  fogCtx.globalCompositeOperation = 'source-over';
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function metersToLng(meters, lat) {
+  return meters / (111320 * Math.cos(lat * Math.PI / 180));
 }
 
 function simulateWalk() {
   let steps = 0;
-  const stepDistance = 0.0001;
-  if (!userLatLng) {
-    userLatLng = [map.getCenter().lat, map.getCenter().lng];
-  }
-  if (!userMarker) {
-    userMarker = L.circleMarker(userLatLng, {
-      radius: 5,
-      color: '#fff',
-      fillColor: '#fff',
-      fillOpacity: 1
-    }).addTo(map);
-  }
-  const intervalId = setInterval(() => {
-    userLatLng = [userLatLng[0] + stepDistance, userLatLng[1]];
-    addVisitedArea(userLatLng);
-    userMarker.setLatLng(userLatLng);
-    map.setView(userLatLng, 18);
-    updateFog();
+  let current = marker ? marker.getLatLng() : map.getCenter();
+  updateMarker(current);
+  const interval = setInterval(() => {
+    current = [current.lat + 0.0001, current.lng];
+    updateMarker(current);
+    map.setView(current, 18);
+    recordReveal(current[0], current[1]);
     steps++;
     if (steps > 20) {
-      clearInterval(intervalId);
+      clearInterval(interval);
     }
   }, 1000);
 }
