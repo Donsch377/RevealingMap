@@ -6,10 +6,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const fog = document.getElementById('fog');
 const btn = document.getElementById('exploreBtn');
+const simulateBtn = document.getElementById('simulateBtn');
 let watchId;
 let userMarker;
 let userLatLng;
-const RADIUS_METERS = 100;
+const RADIUS_METERS = 50;
 let visitedAreas = JSON.parse(localStorage.getItem('visitedAreas') || '[]');
 
 map.on('move', updateFog);
@@ -33,6 +34,8 @@ btn.addEventListener('click', () => {
     enableHighAccuracy: true
   });
 });
+
+simulateBtn.addEventListener('click', simulateWalk);
 
 function onLocation(position) {
   const lat = position.coords.latitude;
@@ -79,4 +82,31 @@ function updateFog() {
   const mask = masks.join(',');
   fog.style.mask = mask;
   fog.style.webkitMask = mask;
+}
+
+function simulateWalk() {
+  let steps = 0;
+  const stepDistance = 0.0001;
+  if (!userLatLng) {
+    userLatLng = [map.getCenter().lat, map.getCenter().lng];
+  }
+  if (!userMarker) {
+    userMarker = L.circleMarker(userLatLng, {
+      radius: 5,
+      color: '#fff',
+      fillColor: '#fff',
+      fillOpacity: 1
+    }).addTo(map);
+  }
+  const intervalId = setInterval(() => {
+    userLatLng = [userLatLng[0] + stepDistance, userLatLng[1]];
+    addVisitedArea(userLatLng);
+    userMarker.setLatLng(userLatLng);
+    map.setView(userLatLng, 18);
+    updateFog();
+    steps++;
+    if (steps > 20) {
+      clearInterval(intervalId);
+    }
+  }, 1000);
 }
