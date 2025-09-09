@@ -4,7 +4,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-const fog = document.getElementById('fog');
+const fogCanvas = document.getElementById('fog');
+const fogCtx = fogCanvas.getContext('2d');
 const btn = document.getElementById('exploreBtn');
 const simulateBtn = document.getElementById('simulateBtn');
 let watchId;
@@ -14,11 +15,12 @@ const RADIUS_METERS = 50;
 let visitedAreas = JSON.parse(localStorage.getItem('visitedAreas') || '[]');
 
 map.on('move', updateFog);
+map.on('resize', resizeFog);
 
 map.whenReady(() => {
+  resizeFog();
   if (visitedAreas.length > 0) {
     map.setView(visitedAreas[visitedAreas.length - 1], 18);
-    updateFog();
   }
 });
 
@@ -68,24 +70,31 @@ function addVisitedArea(latlng) {
   localStorage.setItem('visitedAreas', JSON.stringify(visitedAreas));
 }
 
-function updateFog() {
-  if (visitedAreas.length === 0) return;
+function resizeFog() {
+  const size = map.getSize();
+  fogCanvas.width = size.x;
+  fogCanvas.height = size.y;
+  updateFog();
+}
 
-  const masks = visitedAreas.map(([lat, lng]) => {
+function updateFog() {
+  const size = map.getSize();
+  fogCtx.clearRect(0, 0, size.x, size.y);
+  fogCtx.fillStyle = 'rgba(255,255,255,0.99)';
+  fogCtx.fillRect(0, 0, size.x, size.y);
+  fogCtx.globalCompositeOperation = 'destination-out';
+
+  visitedAreas.forEach(([lat, lng]) => {
     const lngOffset = RADIUS_METERS / (111320 * Math.cos(lat * Math.PI / 180));
-    const pointCenter = map.latLngToContainerPoint([lat, lng]);
-    const pointEast = map.latLngToContainerPoint([lat, lng + lngOffset]);
-    const radiusPx = pointEast.x - pointCenter.x;
-    return `radial-gradient(circle at ${pointCenter.x}px ${pointCenter.y}px, transparent ${radiusPx}px, black ${radiusPx}px)`;
+    const center = map.latLngToContainerPoint([lat, lng]);
+    const east = map.latLngToContainerPoint([lat, lng + lngOffset]);
+    const radiusPx = east.x - center.x;
+    fogCtx.beginPath();
+    fogCtx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);
+    fogCtx.fill();
   });
 
-  const mask = masks.join(',');
-  fog.style.maskImage = mask;
-  fog.style.webkitMaskImage = mask;
-  const composite = Array(masks.length - 1).fill('exclude').join(',');
-  fog.style.maskComposite = composite;
-  const webkitComposite = Array(masks.length - 1).fill('destination-out').join(',');
-  fog.style.webkitMaskComposite = webkitComposite;
+  fogCtx.globalCompositeOperation = 'source-over';
 }
 
 function simulateWalk() {
