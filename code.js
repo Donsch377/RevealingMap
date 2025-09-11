@@ -14,6 +14,8 @@ let marker;
 let revealed = JSON.parse(localStorage.getItem('revealed') || '[]');
 
 map.whenReady(() => {
+  map.getPanes().overlayPane.appendChild(fogCanvas);
+  L.DomUtil.addClass(fogCanvas, 'leaflet-zoom-animated');
   resizeCanvas();
   if (revealed.length) {
     const last = revealed[revealed.length - 1];
@@ -22,9 +24,9 @@ map.whenReady(() => {
   drawFog();
 });
 
-// Update fog continuously while the map is being panned or zoomed.
-// Include zoom animation events so the mask stays in sync during smooth zooms.
-map.on('move zoom zoomstart zoomanim', drawFog);
+// Redraw fog when the map view changes. During zoom animations the canvas
+// moves with the map, then we recompute at the final zoom level.
+map.on('move zoomend', drawFog);
 window.addEventListener('resize', resizeCanvas);
 
 exploreBtn.addEventListener('click', () => {
