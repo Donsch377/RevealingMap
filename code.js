@@ -89,24 +89,32 @@ function recordReveal(lat, lng) {
 
 function resizeCanvas() {
   const size = map.getSize();
-  fogCanvas.width = size.x;
-  fogCanvas.height = size.y;
+  fogCanvas.width = size.x * 2;
+  fogCanvas.height = size.y * 2;
+  fogCanvas.style.width = fogCanvas.width + 'px';
+  fogCanvas.style.height = fogCanvas.height + 'px';
+  fogCanvas.style.left = -size.x / 2 + 'px';
+  fogCanvas.style.top = -size.y / 2 + 'px';
   drawFog();
 }
 
 function drawFog() {
   const size = map.getSize();
-  ctx.clearRect(0, 0, size.x, size.y);
+  const width = fogCanvas.width;
+  const height = fogCanvas.height;
+  ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = 'rgba(255,255,255,0.99)';
-  ctx.fillRect(0, 0, size.x, size.y);
+  ctx.fillRect(0, 0, width, height);
   ctx.globalCompositeOperation = 'destination-out';
 
+  const shiftX = size.x / 2;
+  const shiftY = size.y / 2;
   revealed.forEach(({ lat, lng }) => {
     const center = map.latLngToContainerPoint([lat, lng]);
     const edge = map.latLngToContainerPoint([lat, lng + metersToLng(RADIUS_METERS, lat)]);
     const radius = edge.x - center.x;
     ctx.beginPath();
-    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.arc(center.x + shiftX, center.y + shiftY, radius, 0, Math.PI * 2);
     ctx.fill();
   });
 
