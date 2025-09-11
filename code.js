@@ -25,6 +25,24 @@ map.whenReady(() => {
 // Redraw the fog whenever the map is panned or zoomed so the mask
 // stays aligned with the map view.
 map.on('move zoom', drawFog);
+
+// Keep the fog canvas in sync with Leaflet's zoom animation so that
+// the mask scales smoothly together with the map tiles. Without this
+// the fog stays static until the zoom animation completes, which
+// causes a noticeable lag.
+map.on('zoomanim', (e) => {
+  const scale = map.getZoomScale(e.zoom);
+  const offset = map
+    ._getCenterOffset(e.center)
+    .multiplyBy(-scale)
+    .add(map._getCenterOffset(map.getCenter()));
+  L.DomUtil.setTransform(fogCanvas, offset, scale);
+});
+
+map.on('zoomend', () => {
+  L.DomUtil.setTransform(fogCanvas, new L.Point(0, 0), 1);
+  drawFog();
+});
 window.addEventListener('resize', resizeCanvas);
 
 exploreBtn.addEventListener('click', () => {
