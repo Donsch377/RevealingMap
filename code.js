@@ -22,7 +22,9 @@ map.whenReady(() => {
   drawFog();
 });
 
-map.on('moveend zoomend', drawFog);
+// Redraw the fog whenever the map is panned or zoomed so the mask
+// stays aligned with the map view.
+map.on('move zoom', drawFog);
 window.addEventListener('resize', resizeCanvas);
 
 exploreBtn.addEventListener('click', () => {
