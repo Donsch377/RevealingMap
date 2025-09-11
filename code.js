@@ -16,7 +16,6 @@ let revealed = JSON.parse(localStorage.getItem('revealed') || '[]');
 map.whenReady(() => {
   map.getPanes().overlayPane.appendChild(fogCanvas);
   L.DomUtil.addClass(fogCanvas, 'leaflet-zoom-animated');
-  resizeCanvas();
   if (revealed.length) {
     const last = revealed[revealed.length - 1];
     map.setView(last, 18);
@@ -24,10 +23,9 @@ map.whenReady(() => {
   drawFog();
 });
 
-// Redraw fog when the map view changes. During zoom animations the canvas
-// moves with the map, then we recompute at the final zoom level.
-map.on('move zoomend', drawFog);
-window.addEventListener('resize', resizeCanvas);
+// Keep fog aligned as the map moves or zooms.
+map.on('move zoom zoomend zoomanim', drawFog);
+window.addEventListener('resize', drawFog);
 
 exploreBtn.addEventListener('click', () => {
   if (!navigator.geolocation) {
@@ -71,15 +69,14 @@ function recordReveal(lat, lng) {
   drawFog();
 }
 
-function resizeCanvas() {
-  const size = map.getSize();
-  fogCanvas.width = size.x;
-  fogCanvas.height = size.y;
-  drawFog();
-}
-
 function drawFog() {
   const size = map.getSize();
+  const topLeft = map.containerPointToLayerPoint([0, 0]);
+  L.DomUtil.setPosition(fogCanvas, topLeft);
+  if (fogCanvas.width !== size.x || fogCanvas.height !== size.y) {
+    fogCanvas.width = size.x;
+    fogCanvas.height = size.y;
+  }
   ctx.clearRect(0, 0, size.x, size.y);
   ctx.fillStyle = 'rgba(255,255,255,0.99)';
   ctx.fillRect(0, 0, size.x, size.y);
