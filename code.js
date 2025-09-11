@@ -22,9 +22,9 @@ map.whenReady(() => {
   drawFog();
 });
 
-// Update fog continuously while the map is being panned or zoomed
-// so that the revealed area stays aligned with the map tiles.
-map.on('move zoom', drawFog);
+// Update fog continuously while the map is being panned or zoomed.
+// Include zoom animation events so the mask stays in sync during smooth zooms.
+map.on('move zoom zoomstart zoomanim', drawFog);
 window.addEventListener('resize', resizeCanvas);
 
 exploreBtn.addEventListener('click', () => {
