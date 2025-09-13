@@ -47,6 +47,7 @@ map.on('zoomend', () => {
   drawFog();
 });
 window.addEventListener('resize', resizeCanvas);
+map.on('resize', resizeCanvas);
 
 exploreBtn.addEventListener('click', () => {
   if (!navigator.geolocation) {
@@ -105,6 +106,7 @@ function drawFog() {
   const size = map.getSize();
   const width = fogCanvas.width;
   const height = fogCanvas.height;
+  ctx.globalCompositeOperation = 'source-over';
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = 'rgba(255,255,255,0.99)';
   ctx.fillRect(0, 0, width, height);
