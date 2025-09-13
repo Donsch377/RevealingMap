@@ -4,7 +4,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-const fogCanvas = document.getElementById('fog');
+// Create and append the fog canvas after Leaflet has initialized the map
+const fogCanvas = document.createElement('canvas');
+fogCanvas.id = 'fog';
+map.getContainer().appendChild(fogCanvas);
 const ctx = fogCanvas.getContext('2d');
 const exploreBtn = document.getElementById('explore');
 const simulateBtn = document.getElementById('simulate');
