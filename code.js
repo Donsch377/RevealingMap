@@ -4,7 +4,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-const fogCanvas = document.getElementById('fog');
+// Create and append the fog canvas after Leaflet has initialized the map
+const fogCanvas = document.createElement('canvas');
+fogCanvas.id = 'fog';
+map.getContainer().appendChild(fogCanvas);
 const ctx = fogCanvas.getContext('2d');
 const exploreBtn = document.getElementById('explore');
 const simulateBtn = document.getElementById('simulate');
@@ -25,7 +28,26 @@ map.whenReady(() => {
 // Redraw the fog whenever the map is panned or zoomed so the mask
 // stays aligned with the map view.
 map.on('move zoom', drawFog);
+
+// Keep the fog canvas in sync with Leaflet's zoom animation so that
+// the mask scales smoothly together with the map tiles. Without this
+// the fog stays static until the zoom animation completes, which
+// causes a noticeable lag.
+map.on('zoomanim', (e) => {
+  const scale = map.getZoomScale(e.zoom);
+  const offset = map
+    ._getCenterOffset(e.center)
+    .multiplyBy(-scale)
+    .add(map._getCenterOffset(map.getCenter()));
+  L.DomUtil.setTransform(fogCanvas, offset, scale);
+});
+
+map.on('zoomend', () => {
+  L.DomUtil.setTransform(fogCanvas, new L.Point(0, 0), 1);
+  drawFog();
+});
 window.addEventListener('resize', resizeCanvas);
+map.on('resize', resizeCanvas);
 
 exploreBtn.addEventListener('click', () => {
   if (!navigator.geolocation) {
@@ -71,24 +93,33 @@ function recordReveal(lat, lng) {
 
 function resizeCanvas() {
   const size = map.getSize();
-  fogCanvas.width = size.x;
-  fogCanvas.height = size.y;
+  fogCanvas.width = size.x * 2;
+  fogCanvas.height = size.y * 2;
+  fogCanvas.style.width = fogCanvas.width + 'px';
+  fogCanvas.style.height = fogCanvas.height + 'px';
+  fogCanvas.style.left = -size.x / 2 + 'px';
+  fogCanvas.style.top = -size.y / 2 + 'px';
   drawFog();
 }
 
 function drawFog() {
   const size = map.getSize();
-  ctx.clearRect(0, 0, size.x, size.y);
+  const width = fogCanvas.width;
+  const height = fogCanvas.height;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = 'rgba(255,255,255,0.99)';
-  ctx.fillRect(0, 0, size.x, size.y);
+  ctx.fillRect(0, 0, width, height);
   ctx.globalCompositeOperation = 'destination-out';
 
+  const shiftX = size.x / 2;
+  const shiftY = size.y / 2;
   revealed.forEach(({ lat, lng }) => {
     const center = map.latLngToContainerPoint([lat, lng]);
     const edge = map.latLngToContainerPoint([lat, lng + metersToLng(RADIUS_METERS, lat)]);
     const radius = edge.x - center.x;
     ctx.beginPath();
-    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.arc(center.x + shiftX, center.y + shiftY, radius, 0, Math.PI * 2);
     ctx.fill();
   });
 
