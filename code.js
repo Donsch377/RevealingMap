@@ -11,14 +11,38 @@ map.getContainer().appendChild(fogCanvas);
 const ctx = fogCanvas.getContext('2d');
 const exploreBtn = document.getElementById('explore');
 const simulateBtn = document.getElementById('simulate');
+const resetBtn = document.getElementById('reset-xp');
+const levelFill = document.getElementById('level-bar-fill');
+const levelText = document.getElementById('level-bar-text');
 
 const RADIUS_METERS = 50;
+const AREA_PER_REVEAL = Math.PI * RADIUS_METERS * RADIUS_METERS;
+const XP_PER_SQUARE_METER = 1;
+
+function renderLevelBar(p) {
+  levelFill.style.width = `${p.percent}%`;
+  levelText.textContent = `Level ${p.level} (${p.title})`;
+}
+
+LevelSystem.onProgress((p) => {
+  renderLevelBar(p);
+  console.log(`Level ${p.level} (${p.title}) - ${p.xp}/${p.required} XP`);
+});
+
+LevelSystem.onLevelUp((lvl, title) => {
+  console.log(`Level up! Now level ${lvl}: ${title}`);
+});
+
+renderLevelBar(LevelSystem.getProgress());
 // Enlarges the fog canvas beyond the map size so that the white fog
 // continues to cover the map when zooming out. A larger multiplier
 // means more padding around the map.
 const FOG_CANVAS_MULTIPLIER = 3;
 let marker;
 let revealed = JSON.parse(localStorage.getItem('revealed') || '[]');
+let lastReveal = revealed.length
+  ? { lat: revealed[revealed.length - 1].lat, lng: revealed[revealed.length - 1].lng }
+  : null;
 
 map.whenReady(() => {
   resizeCanvas();
@@ -68,6 +92,14 @@ exploreBtn.addEventListener('click', () => {
 
 simulateBtn.addEventListener('click', simulateWalk);
 
+resetBtn.addEventListener('click', () => {
+  LevelSystem.reset();
+  revealed = [];
+  lastReveal = null;
+  localStorage.removeItem('revealed');
+  drawFog();
+});
+
 function onLocate(position) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
@@ -90,8 +122,26 @@ function updateMarker(latlng) {
 }
 
 function recordReveal(lat, lng) {
-  revealed.push({ lat, lng });
+  const current = { lat, lng };
+  let area = AREA_PER_REVEAL;
+  if (lastReveal) {
+    const d = map.distance(lastReveal, current);
+    if (d < 1) {
+      return; // ignore jitter
+    }
+    if (d < 2 * RADIUS_METERS) {
+      const r = RADIUS_METERS;
+      const overlap =
+        2 * r * r * Math.acos(d / (2 * r)) - 0.5 * d * Math.sqrt(4 * r * r - d * d);
+      area = AREA_PER_REVEAL - overlap;
+    }
+  }
+  lastReveal = current;
+  revealed.push(current);
   localStorage.setItem('revealed', JSON.stringify(revealed));
+  if (area > 0) {
+    LevelSystem.addXP(area * XP_PER_SQUARE_METER);
+  }
   drawFog();
 }
 

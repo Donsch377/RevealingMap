@@ -8,12 +8,18 @@
   <link rel="stylesheet" href="style.css" />
 </head>
   <body>
+    <div id="level-bar">
+      <div id="level-bar-fill"></div>
+      <span id="level-bar-text"></span>
+    </div>
     <div id="map"></div>
     <div id="controls">
       <button id="explore">Explore</button>
       <button id="simulate">Simulate Walk</button>
+      <button id="reset-xp">Reset XP</button>
     </div>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="code.js"></script>
-</body>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="leveling.js"></script>
+    <script src="code.js"></script>
+  </body>
 </html>
