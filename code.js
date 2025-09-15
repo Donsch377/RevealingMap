@@ -11,11 +11,13 @@ map.getContainer().appendChild(fogCanvas);
 const ctx = fogCanvas.getContext('2d');
 const exploreBtn = document.getElementById('explore');
 const simulateBtn = document.getElementById('simulate');
+const resetBtn = document.getElementById('reset-xp');
 const levelFill = document.getElementById('level-bar-fill');
 const levelText = document.getElementById('level-bar-text');
 
 const RADIUS_METERS = 50;
 const AREA_PER_REVEAL = Math.PI * RADIUS_METERS * RADIUS_METERS;
+const XP_PER_SQUARE_METER = 0.001;
 
 function renderLevelBar(p) {
   levelFill.style.width = `${p.percent}%`;
@@ -90,6 +92,14 @@ exploreBtn.addEventListener('click', () => {
 
 simulateBtn.addEventListener('click', simulateWalk);
 
+resetBtn.addEventListener('click', () => {
+  LevelSystem.reset();
+  revealed = [];
+  lastReveal = null;
+  localStorage.removeItem('revealed');
+  drawFog();
+});
+
 function onLocate(position) {
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
@@ -130,7 +140,7 @@ function recordReveal(lat, lng) {
   revealed.push(current);
   localStorage.setItem('revealed', JSON.stringify(revealed));
   if (area > 0) {
-    LevelSystem.addXP(area);
+    LevelSystem.addXP(area * XP_PER_SQUARE_METER);
   }
   drawFog();
 }
