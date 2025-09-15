@@ -103,6 +103,7 @@
     'Worldwalker'
   ];
 
+  const XP_SCALE = 10000;
   let xp = 0;
 
   try {
@@ -123,9 +124,9 @@
   }
 
   function xpToNext(level) {
-    if (level <= 15) return 2 * level;
-    if (level <= 30) return 5 * level;
-    return 10 * level;
+    if (level <= 15) return 2 * level * XP_SCALE;
+    if (level <= 30) return 5 * level * XP_SCALE;
+    return 10 * level * XP_SCALE;
   }
 
   function calculate() {

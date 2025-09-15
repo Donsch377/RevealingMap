@@ -17,7 +17,7 @@ const levelText = document.getElementById('level-bar-text');
 
 const RADIUS_METERS = 50;
 const AREA_PER_REVEAL = Math.PI * RADIUS_METERS * RADIUS_METERS;
-const XP_PER_SQUARE_METER = 0.001;
+const XP_PER_SQUARE_METER = 1;
 
 function renderLevelBar(p) {
   levelFill.style.width = `${p.percent}%`;
