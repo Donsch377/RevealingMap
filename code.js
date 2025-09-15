@@ -13,6 +13,15 @@ const exploreBtn = document.getElementById('explore');
 const simulateBtn = document.getElementById('simulate');
 
 const RADIUS_METERS = 50;
+const AREA_PER_REVEAL = Math.PI * RADIUS_METERS * RADIUS_METERS;
+
+LevelSystem.onProgress((p) => {
+  console.log(`Level ${p.level} (${p.title}) - ${p.xp}/${p.required} XP`);
+});
+
+LevelSystem.onLevelUp((lvl, title) => {
+  console.log(`Level up! Now level ${lvl}: ${title}`);
+});
 // Enlarges the fog canvas beyond the map size so that the white fog
 // continues to cover the map when zooming out. A larger multiplier
 // means more padding around the map.
@@ -92,6 +101,7 @@ function updateMarker(latlng) {
 function recordReveal(lat, lng) {
   revealed.push({ lat, lng });
   localStorage.setItem('revealed', JSON.stringify(revealed));
+  LevelSystem.addXP(AREA_PER_REVEAL);
   drawFog();
 }
 
