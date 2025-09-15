@@ -38,6 +38,9 @@ renderLevelBar(LevelSystem.getProgress());
 const FOG_CANVAS_MULTIPLIER = 3;
 let marker;
 let revealed = JSON.parse(localStorage.getItem('revealed') || '[]');
+let lastReveal = revealed.length
+  ? { lat: revealed[revealed.length - 1].lat, lng: revealed[revealed.length - 1].lng }
+  : null;
 
 map.whenReady(() => {
   resizeCanvas();
@@ -109,9 +112,26 @@ function updateMarker(latlng) {
 }
 
 function recordReveal(lat, lng) {
-  revealed.push({ lat, lng });
+  const current = { lat, lng };
+  let area = AREA_PER_REVEAL;
+  if (lastReveal) {
+    const d = map.distance(lastReveal, current);
+    if (d < 1) {
+      return; // ignore jitter
+    }
+    if (d < 2 * RADIUS_METERS) {
+      const r = RADIUS_METERS;
+      const overlap =
+        2 * r * r * Math.acos(d / (2 * r)) - 0.5 * d * Math.sqrt(4 * r * r - d * d);
+      area = AREA_PER_REVEAL - overlap;
+    }
+  }
+  lastReveal = current;
+  revealed.push(current);
   localStorage.setItem('revealed', JSON.stringify(revealed));
-  LevelSystem.addXP(AREA_PER_REVEAL);
+  if (area > 0) {
+    LevelSystem.addXP(area);
+  }
   drawFog();
 }
 
