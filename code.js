@@ -11,17 +11,27 @@ map.getContainer().appendChild(fogCanvas);
 const ctx = fogCanvas.getContext('2d');
 const exploreBtn = document.getElementById('explore');
 const simulateBtn = document.getElementById('simulate');
+const levelFill = document.getElementById('level-bar-fill');
+const levelText = document.getElementById('level-bar-text');
 
 const RADIUS_METERS = 50;
 const AREA_PER_REVEAL = Math.PI * RADIUS_METERS * RADIUS_METERS;
 
+function renderLevelBar(p) {
+  levelFill.style.width = `${p.percent}%`;
+  levelText.textContent = `Level ${p.level} (${p.title})`;
+}
+
 LevelSystem.onProgress((p) => {
+  renderLevelBar(p);
   console.log(`Level ${p.level} (${p.title}) - ${p.xp}/${p.required} XP`);
 });
 
 LevelSystem.onLevelUp((lvl, title) => {
   console.log(`Level up! Now level ${lvl}: ${title}`);
 });
+
+renderLevelBar(LevelSystem.getProgress());
 // Enlarges the fog canvas beyond the map size so that the white fog
 // continues to cover the map when zooming out. A larger multiplier
 // means more padding around the map.
