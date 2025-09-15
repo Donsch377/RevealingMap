@@ -13,6 +13,10 @@ const exploreBtn = document.getElementById('explore');
 const simulateBtn = document.getElementById('simulate');
 
 const RADIUS_METERS = 50;
+// Enlarges the fog canvas beyond the map size so that the white fog
+// continues to cover the map when zooming out. A larger multiplier
+// means more padding around the map.
+const FOG_CANVAS_MULTIPLIER = 3;
 let marker;
 let revealed = JSON.parse(localStorage.getItem('revealed') || '[]');
 
@@ -93,12 +97,12 @@ function recordReveal(lat, lng) {
 
 function resizeCanvas() {
   const size = map.getSize();
-  fogCanvas.width = size.x * 2;
-  fogCanvas.height = size.y * 2;
+  fogCanvas.width = size.x * FOG_CANVAS_MULTIPLIER;
+  fogCanvas.height = size.y * FOG_CANVAS_MULTIPLIER;
   fogCanvas.style.width = fogCanvas.width + 'px';
   fogCanvas.style.height = fogCanvas.height + 'px';
-  fogCanvas.style.left = -size.x / 2 + 'px';
-  fogCanvas.style.top = -size.y / 2 + 'px';
+  fogCanvas.style.left = -(FOG_CANVAS_MULTIPLIER - 1) * size.x / 2 + 'px';
+  fogCanvas.style.top = -(FOG_CANVAS_MULTIPLIER - 1) * size.y / 2 + 'px';
   drawFog();
 }
 
@@ -112,8 +116,8 @@ function drawFog() {
   ctx.fillRect(0, 0, width, height);
   ctx.globalCompositeOperation = 'destination-out';
 
-  const shiftX = size.x / 2;
-  const shiftY = size.y / 2;
+  const shiftX = (FOG_CANVAS_MULTIPLIER - 1) * size.x / 2;
+  const shiftY = (FOG_CANVAS_MULTIPLIER - 1) * size.y / 2;
   revealed.forEach(({ lat, lng }) => {
     const center = map.latLngToContainerPoint([lat, lng]);
     const edge = map.latLngToContainerPoint([lat, lng + metersToLng(RADIUS_METERS, lat)]);
