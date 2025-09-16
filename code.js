@@ -1,4 +1,4 @@
-const map = L.map('map').setView([0, 0], 15);
+const map = L.map('map', { zoomControl: false }).setView([0, 0], 15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap contributors'
@@ -15,6 +15,8 @@ const resetBtn = document.getElementById('reset-xp');
 const levelBar = document.getElementById('level-bar');
 const levelFill = document.getElementById('level-bar-fill');
 const levelText = document.getElementById('level-bar-text');
+const levelIndicator = document.querySelector('.level-indicator');
+let levelCelebrateTimeout;
 
 const RADIUS_METERS = 50;
 const AREA_PER_REVEAL = Math.PI * RADIUS_METERS * RADIUS_METERS;
@@ -40,6 +42,13 @@ LevelSystem.onProgress((p) => {
 });
 
 LevelSystem.onLevelUp((lvl, title) => {
+  if (levelIndicator) {
+    levelIndicator.classList.add('level-up');
+    clearTimeout(levelCelebrateTimeout);
+    levelCelebrateTimeout = setTimeout(() => {
+      levelIndicator.classList.remove('level-up');
+    }, 4000);
+  }
   console.log(`Level up! Now level ${lvl}: ${title}`);
 });
 
@@ -87,28 +96,34 @@ map.on('zoomend', () => {
 window.addEventListener('resize', resizeCanvas);
 map.on('resize', resizeCanvas);
 
-exploreBtn.addEventListener('click', () => {
-  if (!navigator.geolocation) {
-    alert('Geolocation not supported');
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(onLocate, console.error, {
-    enableHighAccuracy: true
+if (exploreBtn) {
+  exploreBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation not supported');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(onLocate, console.error, {
+      enableHighAccuracy: true
+    });
+    navigator.geolocation.watchPosition(onLocate, console.error, {
+      enableHighAccuracy: true
+    });
   });
-  navigator.geolocation.watchPosition(onLocate, console.error, {
-    enableHighAccuracy: true
+}
+
+if (simulateBtn) {
+  simulateBtn.addEventListener('click', simulateWalk);
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener('click', () => {
+    LevelSystem.reset();
+    revealed = [];
+    lastReveal = null;
+    localStorage.removeItem('revealed');
+    drawFog();
   });
-});
-
-simulateBtn.addEventListener('click', simulateWalk);
-
-resetBtn.addEventListener('click', () => {
-  LevelSystem.reset();
-  revealed = [];
-  lastReveal = null;
-  localStorage.removeItem('revealed');
-  drawFog();
-});
+}
 
 function onLocate(position) {
   const lat = position.coords.latitude;
