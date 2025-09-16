@@ -19,6 +19,7 @@ const levelBar = document.getElementById('level-bar');
 const levelFill = document.getElementById('level-bar-fill');
 const levelText = document.getElementById('level-bar-text');
 const levelIndicator = document.querySelector('.level-indicator');
+const statusMessage = document.getElementById('status');
 let levelCelebrateTimeout;
 
 const RADIUS_METERS = 50;
@@ -65,6 +66,23 @@ let revealed = JSON.parse(localStorage.getItem('revealed') || '[]');
 let lastReveal = revealed.length
   ? { lat: revealed[revealed.length - 1].lat, lng: revealed[revealed.length - 1].lng }
   : null;
+let hasAnnouncedTracking = false;
+
+function updateStatusMessage(message) {
+  if (statusMessage) {
+    statusMessage.textContent = message;
+  }
+}
+
+function handleGeolocationError(error) {
+  console.error('Geolocation error:', error);
+  const message =
+    (error && error.message
+      ? `Unable to start location tracking. ${error.message}`
+      : 'Unable to start location tracking.'
+    ).trim();
+  updateStatusMessage(message);
+}
 
 map.whenReady(() => {
   resizeCanvas();
@@ -103,12 +121,15 @@ if (exploreBtn) {
   exploreBtn.addEventListener('click', () => {
     if (!navigator.geolocation) {
       alert('Geolocation not supported');
+      updateStatusMessage('Geolocation is not supported in this browser.');
       return;
     }
-    navigator.geolocation.getCurrentPosition(onLocate, console.error, {
+    hasAnnouncedTracking = false;
+    updateStatusMessage('Locating your position...');
+    navigator.geolocation.getCurrentPosition(onLocate, handleGeolocationError, {
       enableHighAccuracy: true
     });
-    navigator.geolocation.watchPosition(onLocate, console.error, {
+    navigator.geolocation.watchPosition(onLocate, handleGeolocationError, {
       enableHighAccuracy: true
     });
   });
@@ -129,6 +150,10 @@ if (resetBtn) {
 }
 
 function onLocate(position) {
+  if (!hasAnnouncedTracking) {
+    hasAnnouncedTracking = true;
+    updateStatusMessage('Location tracking started.');
+  }
   const lat = position.coords.latitude;
   const lng = position.coords.longitude;
   updateMarker([lat, lng]);
