@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Revealing Map | Explorer's Atlas</title>
+    <title>Revealing Map</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -28,12 +28,9 @@
       </p>
     </main>
     <header class="site-banner" role="banner">
-      <div class="brand">
-        <span class="eyebrow">Explorer's Atlas</span>
-        <h1>Revealing Map</h1>
-        <p class="tagline">Track your wanderings as they lift the citywide fog in real time.</p>
-      </div>
+      <h1 class="site-title">Revealing Map</h1>
       <div class="level-indicator" aria-live="polite">
+        <span id="level-bar-text"></span>
         <div
           id="level-bar"
           role="progressbar"
@@ -44,7 +41,6 @@
         >
           <div id="level-bar-fill"></div>
         </div>
-        <span id="level-bar-text"></span>
       </div>
     </header>
     <section id="controls" aria-label="Explorer controls">
