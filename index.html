@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revealing Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Revealing Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
   <body>
-    <header>
-      <h1>Revealing Map Exploration Tracker</h1>
-      <div id="level-bar">
-        <div id="level-bar-fill"></div>
-        <span id="level-bar-text"></span>
-      </div>
-    </header>
-    <main>
+    <main class="map-stage">
       <div
         id="map"
         role="application"
@@ -24,15 +23,29 @@
       ></div>
       <h2 id="map-heading" class="visually-hidden">Exploration progress map</h2>
       <p id="map-description" class="visually-hidden">
-        Interactive map showing the areas you have uncovered and the fog that still
-        hides unexplored locations.
+        Interactive map showing the areas you have uncovered and the fog that still hides unexplored
+        locations.
       </p>
-      <section id="controls">
-        <button id="explore">Explore</button>
-        <button id="simulate">Simulate Walk</button>
-        <button id="reset-xp">Reset XP</button>
-      </section>
     </main>
+    <header class="site-banner" role="banner">
+      <h1 class="site-title">Revealing Map</h1>
+      <div class="level-indicator" aria-live="polite">
+        <span id="level-bar-text"></span>
+        <div
+          id="level-bar"
+          role="progressbar"
+          aria-label="Exploration level"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <div id="level-bar-fill"></div>
+        </div>
+      </div>
+    </header>
+    <section id="controls" aria-label="Explorer controls">
+      <button id="explore">Start exploring</button>
+    </section>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="leveling.js"></script>
     <script src="code.js"></script>
