@@ -7,6 +7,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Create and append the fog canvas after Leaflet has initialized the map
 const fogCanvas = document.createElement('canvas');
 fogCanvas.id = 'fog';
+fogCanvas.setAttribute('aria-hidden', 'true');
+fogCanvas.setAttribute('role', 'presentation');
+fogCanvas.tabIndex = -1;
 map.getContainer().appendChild(fogCanvas);
 const ctx = fogCanvas.getContext('2d');
 const exploreBtn = document.getElementById('explore');
