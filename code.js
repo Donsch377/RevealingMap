@@ -1,63 +1,3 @@
-const themeStorageKey = 'preferred-theme';
-const rootElement = document.documentElement;
-const themeToggle = document.getElementById('theme-toggle');
-const themeToggleIcon = themeToggle ? themeToggle.querySelector('.theme-toggle-icon') : null;
-const themeToggleLabel = themeToggle ? themeToggle.querySelector('.theme-toggle-label') : null;
-const systemPrefersDark =
-  typeof window.matchMedia === 'function'
-    ? window.matchMedia('(prefers-color-scheme: dark)')
-    : null;
-
-function applyTheme(theme) {
-  const resolvedTheme = theme === 'dark' ? 'dark' : 'light';
-  rootElement.setAttribute('data-theme', resolvedTheme);
-  if (themeToggle) {
-    const isDark = resolvedTheme === 'dark';
-    themeToggle.setAttribute('aria-pressed', String(isDark));
-    themeToggle.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-    if (themeToggleIcon) {
-      themeToggleIcon.textContent = isDark ? '☀️' : '🌙';
-    }
-    if (themeToggleLabel) {
-      themeToggleLabel.textContent = isDark ? 'Light mode' : 'Dark mode';
-    }
-  }
-}
-
-let storedTheme = null;
-try {
-  storedTheme = localStorage.getItem(themeStorageKey);
-} catch (error) {
-  storedTheme = null;
-}
-
-const initialTheme =
-  storedTheme ||
-  rootElement.getAttribute('data-theme') ||
-  (systemPrefersDark && systemPrefersDark.matches ? 'dark' : 'light');
-applyTheme(initialTheme);
-
-if (themeToggle) {
-  themeToggle.addEventListener('click', () => {
-    const nextTheme = rootElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    applyTheme(nextTheme);
-    try {
-      localStorage.setItem(themeStorageKey, nextTheme);
-    } catch (error) {
-      /* ignore storage errors */
-    }
-  });
-}
-
-if (systemPrefersDark && !storedTheme) {
-  const listener = (event) => applyTheme(event.matches ? 'dark' : 'light');
-  if (typeof systemPrefersDark.addEventListener === 'function') {
-    systemPrefersDark.addEventListener('change', listener);
-  } else if (typeof systemPrefersDark.addListener === 'function') {
-    systemPrefersDark.addListener(listener);
-  }
-}
-
 const map = L.map('map').setView([0, 0], 15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
@@ -75,35 +15,22 @@ const resetBtn = document.getElementById('reset-xp');
 const levelBar = document.getElementById('level-bar');
 const levelFill = document.getElementById('level-bar-fill');
 const levelText = document.getElementById('level-bar-text');
-const levelDetail = document.getElementById('level-progress-detail');
 
 const RADIUS_METERS = 50;
 const AREA_PER_REVEAL = Math.PI * RADIUS_METERS * RADIUS_METERS;
 const XP_PER_SQUARE_METER = 1;
 
 function renderLevelBar(p) {
-  if (levelFill) {
-    levelFill.style.width = `${p.percent}%`;
-  }
-  if (levelText) {
-    levelText.textContent = `Level ${p.level} · ${p.title}`;
-  }
+  const percent = Number.isFinite(p.percent) ? p.percent : 0;
+  const roundedPercent = Math.min(100, Math.max(0, percent));
+  levelFill.style.width = `${roundedPercent}%`;
+  levelText.textContent = `Level ${p.level} · ${p.title}`;
   if (levelBar) {
-    const percent = Math.max(0, Math.min(100, Math.round(p.percent)));
-    levelBar.setAttribute('aria-valuenow', String(percent));
+    levelBar.setAttribute('aria-valuenow', roundedPercent.toFixed(1));
     levelBar.setAttribute(
       'aria-valuetext',
-      `Level ${p.level}, ${percent} percent progress toward the next level`
+      `Level ${p.level} ${p.title}, ${Math.round(roundedPercent)} percent to next level`
     );
-  }
-  if (levelDetail) {
-    if (p.required > 0) {
-      const currentXp = Math.round(p.xp).toLocaleString();
-      const targetXp = Math.round(p.required).toLocaleString();
-      levelDetail.textContent = `${currentXp} XP of ${targetXp} XP to reach the next level`;
-    } else {
-      levelDetail.textContent = 'You have reached the maximum level available.';
-    }
   }
 }
 

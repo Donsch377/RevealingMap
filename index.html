@@ -1,24 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Revealing Map · Urban Explorer Dashboard</title>
+    <title>Revealing Map | Explorer's Atlas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <script>
-      (function () {
-        const storageKey = 'preferred-theme';
-        try {
-          const stored = localStorage.getItem(storageKey);
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          const theme = stored || (prefersDark ? 'dark' : 'light');
-          document.documentElement.setAttribute('data-theme', theme);
-        } catch (error) {
-          document.documentElement.setAttribute('data-theme', 'light');
-        }
-      })();
-    </script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
@@ -27,73 +14,44 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header class="page-header">
-      <div class="branding">
-        <p class="eyebrow">Revealing Map</p>
-        <h1>Urban Explorer Dashboard</h1>
-        <p class="subtitle">
-          Track your real-world wanderings as they peel back the fog covering your city.
-        </p>
-      </div>
-      <button id="theme-toggle" type="button" class="theme-toggle" aria-pressed="false">
-        <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
-        <span class="theme-toggle-label">Dark mode</span>
-      </button>
-    </header>
-    <main class="page-main">
-      <div class="dashboard">
-        <section class="map-card" aria-labelledby="map-heading">
-          <header class="card-header">
-            <h2 id="map-heading">Live exploration map</h2>
-            <p class="card-subtitle">
-              Watch the fog lift block by block as you uncover new territory.
-            </p>
-          </header>
-          <div class="map-container">
-            <div
-              id="map"
-              role="application"
-              aria-labelledby="map-heading"
-              aria-describedby="map-description"
-            ></div>
-          </div>
-          <p id="map-description" class="visually-hidden">
-            Interactive map showing the areas you have uncovered and the fog that still hides unexplored
-            locations.
-          </p>
-        </section>
-        <section class="sidebar" aria-labelledby="progress-heading">
-          <div class="card-header">
-            <h2 id="progress-heading">Progress tracker</h2>
-            <p class="card-subtitle">Earn experience as you reveal more of the world around you.</p>
-          </div>
-          <div class="status-card">
-            <div
-              id="level-bar"
-              role="progressbar"
-              aria-label="Exploration level"
-              aria-valuemin="0"
-              aria-valuemax="100"
-            >
-              <div id="level-bar-fill"></div>
-              <span id="level-bar-text"></span>
-            </div>
-            <p id="level-progress-detail" class="level-detail"></p>
-            <div class="control-section">
-              <h3>Explorer controls</h3>
-              <p class="section-description">
-                Use your device's GPS or a quick simulation to see how the leveling system reacts.
-              </p>
-              <div id="controls" class="control-grid">
-                <button id="explore" class="control-button primary">Start exploring</button>
-                <button id="simulate" class="control-button secondary">Simulate walk</button>
-                <button id="reset-xp" class="control-button ghost">Reset progress</button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+    <main class="map-stage">
+      <div
+        id="map"
+        role="application"
+        aria-labelledby="map-heading"
+        aria-describedby="map-description"
+      ></div>
+      <h2 id="map-heading" class="visually-hidden">Exploration progress map</h2>
+      <p id="map-description" class="visually-hidden">
+        Interactive map showing the areas you have uncovered and the fog that still hides unexplored
+        locations.
+      </p>
     </main>
+    <header class="site-banner" role="banner">
+      <div class="brand">
+        <span class="eyebrow">Explorer's Atlas</span>
+        <h1>Revealing Map</h1>
+        <p class="tagline">Track your wanderings as they lift the citywide fog in real time.</p>
+      </div>
+      <div class="level-indicator" aria-live="polite">
+        <div
+          id="level-bar"
+          role="progressbar"
+          aria-label="Exploration level"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <div id="level-bar-fill"></div>
+        </div>
+        <span id="level-bar-text"></span>
+      </div>
+    </header>
+    <section id="controls" aria-label="Explorer controls">
+      <button id="explore">Start exploring</button>
+      <button id="simulate">Simulate walk</button>
+      <button id="reset-xp">Reset progress</button>
+    </section>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="leveling.js"></script>
     <script src="code.js"></script>
