@@ -15,12 +15,24 @@
         <span id="level-bar-text"></span>
       </div>
     </header>
-    <main id="map"></main>
-    <section id="controls">
-      <button id="explore">Explore</button>
-      <button id="simulate">Simulate Walk</button>
-      <button id="reset-xp">Reset XP</button>
-    </section>
+    <main>
+      <div
+        id="map"
+        role="application"
+        aria-labelledby="map-heading"
+        aria-describedby="map-description"
+      ></div>
+      <h2 id="map-heading" class="visually-hidden">Exploration progress map</h2>
+      <p id="map-description" class="visually-hidden">
+        Interactive map showing the areas you have uncovered and the fog that still
+        hides unexplored locations.
+      </p>
+      <section id="controls">
+        <button id="explore">Explore</button>
+        <button id="simulate">Simulate Walk</button>
+        <button id="reset-xp">Reset XP</button>
+      </section>
+    </main>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="leveling.js"></script>
     <script src="code.js"></script>
